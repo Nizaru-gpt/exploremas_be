@@ -1,11 +1,14 @@
 ---
-title: Exploremas
-emoji: 🏢
-colorFrom: red
-colorTo: blue
+title: Exploremas API
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
 sdk: docker
 pinned: false
 license: mit
+app_port: 7860
 ---
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+# Exploremas API (Rust Backend)
+
+Ini adalah backend server untuk aplikasi Exploremas yang dibangun menggunakan Rust (Axum) dan Database PostgreSQL.
