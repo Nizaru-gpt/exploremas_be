@@ -17,7 +17,7 @@ pub struct WisataSql {
     htm: i32,
     gmaps: String,
     pictures: String,
-    pub tags: Option<Vec<String>>, // Added tags
+    pub tags: Option<Vec<String>>, // <--- TAMBAH INI
 }
 
 #[derive(Serialize, FromRow)]
@@ -31,7 +31,7 @@ pub struct WisataResponseModel {
     pub htm: i32,
     pub link_gmaps: String,
     pub link_foto: String,
-    pub tags: Option<Vec<String>>, // Added tags
+    pub tags: Option<Vec<String>>, // <--- TAMBAH INI
 }
 
 #[derive(Serialize)]
@@ -55,7 +55,7 @@ pub async fn create_wisata(
         .bind(&payload.htm)
         .bind(&payload.gmaps)
         .bind(&payload.pictures)
-        .bind(&payload.tags)
+        .bind(&payload.tags) // <--- BIND TAGS
         .execute(&state.pool)
         .await;
 
