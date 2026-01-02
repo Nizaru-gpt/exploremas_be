@@ -1,3 +1,4 @@
+// src/wisata_alam.rs
 use crate::app_state::AppState;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -16,6 +17,7 @@ pub struct WisataSql {
     htm: i32,
     gmaps: String,
     pictures: String,
+    pub tags: Option<Vec<String>>, // Added tags
 }
 
 #[derive(Serialize, FromRow)]
@@ -29,6 +31,7 @@ pub struct WisataResponseModel {
     pub htm: i32,
     pub link_gmaps: String,
     pub link_foto: String,
+    pub tags: Option<Vec<String>>, // Added tags
 }
 
 #[derive(Serialize)]
@@ -42,8 +45,8 @@ pub async fn create_wisata(
     Json(payload): Json<WisataSql>,
 ) -> impl IntoResponse {
     let result = sqlx::query(
-        "insert into wisata_alam(nama_tempat, kategori, alamat, jam_buka, jam_tutup, htm, link_gmaps, link_foto)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)")
+        "insert into wisata_alam(nama_tempat, kategori, alamat, jam_buka, jam_tutup, htm, link_gmaps, link_foto, tags)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)")
         .bind(&payload.name)
         .bind(&payload.category)
         .bind(&payload.address)
@@ -52,6 +55,7 @@ pub async fn create_wisata(
         .bind(&payload.htm)
         .bind(&payload.gmaps)
         .bind(&payload.pictures)
+        .bind(&payload.tags)
         .execute(&state.pool)
         .await;
 
@@ -87,7 +91,6 @@ pub async fn get_wisata_alam_by_id(State(state): State<AppState>, Path(id): Path
     }
 }
 
-// --- BARU: UPDATE ---
 pub async fn update_wisata_alam(
     State(state): State<AppState>,
     Path(id): Path<i32>,
@@ -95,8 +98,8 @@ pub async fn update_wisata_alam(
 ) -> impl IntoResponse {
     let result = sqlx::query(
         r#"UPDATE wisata_alam 
-           SET nama_tempat=$1, kategori=$2, alamat=$3, jam_buka=$4, jam_tutup=$5, htm=$6, link_gmaps=$7, link_foto=$8 
-           WHERE id=$9"#
+           SET nama_tempat=$1, kategori=$2, alamat=$3, jam_buka=$4, jam_tutup=$5, htm=$6, link_gmaps=$7, link_foto=$8, tags=$9
+           WHERE id=$10"#
     )
     .bind(&payload.name)
     .bind(&payload.category)
@@ -106,6 +109,7 @@ pub async fn update_wisata_alam(
     .bind(&payload.htm)
     .bind(&payload.gmaps)
     .bind(&payload.pictures)
+    .bind(&payload.tags)
     .bind(id)
     .execute(&state.pool)
     .await;
@@ -122,7 +126,6 @@ pub async fn update_wisata_alam(
     }
 }
 
-// --- BARU: DELETE ---
 pub async fn delete_wisata_alam(
     State(state): State<AppState>,
     Path(id): Path<i32>,
