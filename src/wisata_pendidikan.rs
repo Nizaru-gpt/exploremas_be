@@ -17,7 +17,7 @@ pub struct WisataSql {
     htm: i32,
     gmaps: String,
     pictures: String,
-    pub tags: Option<Vec<String>>, // <--- TAMBAH INI
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Serialize, FromRow)]
@@ -31,7 +31,7 @@ pub struct WisataResponseModel {
     pub htm: i32,
     pub link_gmaps: String,
     pub link_foto: String,
-    pub tags: Option<Vec<String>>, // <--- TAMBAH INI
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]
@@ -55,7 +55,7 @@ pub async fn create_wisata_pendidikan(
         .bind(&payload.htm)
         .bind(&payload.gmaps)
         .bind(&payload.pictures)
-        .bind(&payload.tags) // <--- BIND TAGS
+        .bind(&payload.tags)
         .execute(&state.pool)
         .await;
 
@@ -67,7 +67,7 @@ pub async fn create_wisata_pendidikan(
 
 #[debug_handler]
 pub async fn get_wisata_pendidikan(State(state): State<AppState>) -> impl IntoResponse {
-    let result = sqlx::query_as::<_, WisataResponseModel>("select * from wisata_pendidikan")
+    let result = sqlx::query_as::<_, WisataResponseModel>("select * from wisata_pendidikan ORDER BY id")
         .fetch_all(&state.pool)
         .await;
 
@@ -88,9 +88,64 @@ pub async fn get_wisata_pendidikan_by_id(State(state): State<AppState>, Path(id)
     match result {
         Ok(Some(data)) => Json(data).into_response(),
         Ok(None) => (StatusCode::NOT_FOUND, "Not found").into_response(),
-        Err(err) => {
-            eprintln!("DB error: {:?}", err);
-            StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        }
+        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("DB Error: {:?}", err)).into_response()
+    }
+}
+
+// === FITUR BARU: UPDATE ===
+pub async fn update_wisata_pendidikan(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Json(payload): Json<WisataSql>,
+) -> impl IntoResponse {
+    let result = sqlx::query(
+        r#"UPDATE wisata_pendidikan 
+           SET nama_tempat=$1, kategori=$2, alamat=$3, jam_buka=$4, jam_tutup=$5, htm=$6, link_gmaps=$7, link_foto=$8, tags=$9
+           WHERE id=$10"#
+    )
+    .bind(&payload.name)
+    .bind(&payload.category)
+    .bind(&payload.address)
+    .bind(&payload.open)
+    .bind(&payload.close)
+    .bind(&payload.htm)
+    .bind(&payload.gmaps)
+    .bind(&payload.pictures)
+    .bind(&payload.tags)
+    .bind(id)
+    .execute(&state.pool)
+    .await;
+
+    match result {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
+                (StatusCode::NOT_FOUND, Json(WisataResponse { message: "ID Not Found".to_string() }))
+            } else {
+                (StatusCode::OK, Json(WisataResponse { message: "Updated successfully".to_string() }))
+            }
+        },
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(WisataResponse { message: format!("Error: {}", e) })),
+    }
+}
+
+// === FITUR BARU: DELETE ===
+pub async fn delete_wisata_pendidikan(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> impl IntoResponse {
+    let result = sqlx::query("DELETE FROM wisata_pendidikan WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await;
+
+    match result {
+        Ok(res) => {
+            if res.rows_affected() == 0 {
+                (StatusCode::NOT_FOUND, Json(WisataResponse { message: "ID Not Found".to_string() }))
+            } else {
+                (StatusCode::OK, Json(WisataResponse { message: "Deleted successfully".to_string() }))
+            }
+        },
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(WisataResponse { message: format!("Error: {}", e) })),
     }
 }
