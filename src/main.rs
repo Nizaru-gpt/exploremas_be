@@ -13,8 +13,8 @@ mod tempat_nongkrong;
 mod user;
 mod wisata_alam;
 mod wisata_pendidikan;
-mod chatbot; // Modul Chatbot
-mod news;    // Modul Berita
+mod chatbot; 
+mod news;    
 
 use crate::app_state::AppState;
 
@@ -28,8 +28,10 @@ use crate::wisata_alam::{
 };
 
 // WISATA PENDIDIKAN HANDLERS
+// Update Import: Menambahkan update & delete agar tidak perlu tulis modulnya di bawah
 use crate::wisata_pendidikan::{
     create_wisata_pendidikan, get_wisata_pendidikan, get_wisata_pendidikan_by_id,
+    update_wisata_pendidikan, delete_wisata_pendidikan
 };
 
 // KULINER HANDLERS
@@ -51,12 +53,9 @@ use crate::news::{get_all_news, add_news, delete_news};
 
 #[tokio::main]
 async fn main() {
-    // Load .env file (hanya efek di local, di huggingface pakai Secret)
     dotenvy::dotenv().ok();
 
-    // Koneksi Database
-    // Pastikan Secret DATABASE_URL sudah diset di Settings Hugging Face Space
-    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in environment variables");
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set");
 
     let pool = sqlx::postgres::PgPool::connect(&db_url)
         .await
@@ -64,7 +63,6 @@ async fn main() {
 
     let state = AppState { pool };
 
-    // Konfigurasi CORS (Izinkan semua origin agar Vercel bisa akses)
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
         .allow_origin(Any)
@@ -91,10 +89,9 @@ async fn main() {
         .route("/wisata_pendidikan", get(get_wisata_pendidikan))
         .route("/wisata_pendidikan/{id}", get(get_wisata_pendidikan_by_id))
         .route("/add_wisata_pendidikan", post(create_wisata_pendidikan))
-        
-        // --- PERBAIKAN UTAMA DI SINI (Ganti :id jadi {id}) ---
-        .route("/update_wisata_pendidikan/{id}", put(wisata_pendidikan::update_wisata_pendidikan))
-        .route("/delete_wisata_pendidikan/{id}", delete(wisata_pendidikan::delete_wisata_pendidikan))
+        // PERBAIKAN DI SINI: Tambah /api di depan route
+        .route("/api/update_wisata_pendidikan/{id}", put(update_wisata_pendidikan))
+        .route("/api/delete_wisata_pendidikan/{id}", delete(delete_wisata_pendidikan))
 
         // ===== KULINER =====
         .route("/kuliner", get(get_kuliner))
@@ -124,7 +121,6 @@ async fn main() {
         .with_state(state)
         .layer(cors);
 
-    // --- KONFIGURASI PORT HUGGING FACE ---
     let port = 7860;
     println!("Server is running on port {}", port);
 
