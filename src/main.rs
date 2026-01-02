@@ -91,6 +91,9 @@ async fn main() {
         .route("/wisata_pendidikan", get(get_wisata_pendidikan))
         .route("/wisata_pendidikan/{id}", get(get_wisata_pendidikan_by_id)) // SUDAH DIPERBAIKI: pakai {id}
         .route("/add_wisata_pendidikan", post(create_wisata_pendidikan))
+        
+        .route("/update_wisata_pendidikan/:id", put(wisata_pendidikan::update_wisata_pendidikan))
+        .route("/delete_wisata_pendidikan/:id", delete(wisata_pendidikan::delete_wisata_pendidikan))
 
         // ===== KULINER =====
         .route("/kuliner", get(get_kuliner))
