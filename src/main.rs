@@ -17,12 +17,13 @@ mod wisata_pendidikan;
 mod chatbot;
 mod news;
 mod upload; // ✅ TAMBAH INI
+mod mail;
 
 use crate::app_state::AppState;
 
 // ADMIN + USER HANDLERS
 use crate::admin::{admin_login_handler, admin_register_handler};
-use crate::user::{login_user, register_user};
+use crate::user::{login_user, register_user, forgot_password, reset_password}; // ✅ tambah 2 handler
 
 // WISATA ALAM HANDLERS
 use crate::wisata_alam::{
@@ -31,8 +32,8 @@ use crate::wisata_alam::{
 
 // WISATA PENDIDIKAN HANDLERS
 use crate::wisata_pendidikan::{
-    create_wisata_pendidikan, get_wisata_pendidikan, get_wisata_pendidikan_by_id,
-    update_wisata_pendidikan, delete_wisata_pendidikan
+    create_wisata_pendidikan, delete_wisata_pendidikan, get_wisata_pendidikan,
+    get_wisata_pendidikan_by_id, update_wisata_pendidikan,
 };
 
 // KULINER HANDLERS
@@ -45,10 +46,10 @@ use crate::tempat_nongkrong::{
 };
 
 // CHATBOT HANDLERS
-use crate::chatbot::{save_chat_log, get_chat_stats};
+use crate::chatbot::{get_chat_stats, save_chat_log};
 
 // NEWS HANDLERS
-use crate::news::{get_all_news, add_news, delete_news};
+use crate::news::{add_news, delete_news, get_all_news};
 
 // ✅ UPLOAD HANDLER
 use crate::upload::upload_handler;
@@ -69,7 +70,13 @@ async fn main() {
     let state = AppState { pool };
 
     let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::OPTIONS, // ✅ tambahan minimal: biar preflight aman
+        ])
         .allow_origin(Any)
         .allow_headers(Any);
 
@@ -78,6 +85,10 @@ async fn main() {
         .route("/register", post(register_user))
         .route("/login", post(login_user))
 
+        // ✅ FORGOT PASSWORD (OTP)
+        .route("/auth/forgot_password", post(forgot_password))
+        .route("/auth/reset_password", post(reset_password))
+
         // ===== AUTH ADMIN =====
         .route("/admin_register", post(admin_register_handler))
         .route("/admin_login", post(admin_login_handler))
@@ -85,7 +96,7 @@ async fn main() {
         // ✅ UPLOAD (multipart) -> balikin { url }
         .route("/api/upload", post(upload_handler))
 
-        // ✅ STATIC FILES: biar URL http://localhost:7860/uploads/<file> bisa diakses
+        // ✅ STATIC FILES
         .nest_service("/uploads", ServeDir::new("uploads"))
 
         // =========================================================
