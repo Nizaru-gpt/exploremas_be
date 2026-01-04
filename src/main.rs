@@ -23,7 +23,7 @@ use crate::app_state::AppState;
 
 // ADMIN + USER HANDLERS
 use crate::admin::{admin_login_handler, admin_register_handler};
-use crate::user::{login_user, register_user, forgot_password, reset_password}; // ✅ tambah 2 handler
+use crate::user::{forgot_password, login_user, register_user, reset_password}; // ✅ tambah 2 handler
 
 // WISATA ALAM HANDLERS
 use crate::wisata_alam::{
@@ -46,7 +46,17 @@ use crate::tempat_nongkrong::{
 };
 
 // CHATBOT HANDLERS
-use crate::chatbot::{get_chat_stats, save_chat_log};
+use crate::chatbot::{
+    get_chat_stats,
+    save_chat_log,
+    // ✅ LLM
+    llm_answer,
+    // ✅ FAQ persistence
+    get_faqs,
+    upsert_faq,
+    delete_faq,
+    hit_faq,
+};
 
 // NEWS HANDLERS
 use crate::news::{add_news, delete_news, get_all_news};
@@ -84,7 +94,6 @@ async fn main() {
         // ===== AUTH USER =====
         .route("/register", post(register_user))
         .route("/login", post(login_user))
-
         // ✅ FORGOT PASSWORD (OTP)
         .route("/auth/forgot_password", post(forgot_password))
         .route("/auth/reset_password", post(reset_password))
@@ -139,11 +148,24 @@ async fn main() {
                 .delete(delete_tempat_nongkrong),
         )
 
+        // =========================================================
         // CHATBOT
+        // =========================================================
+        // LOG + STATS
         .route("/api/chat/log", post(save_chat_log))
         .route("/api/chat/stats", get(get_chat_stats))
 
+        // ✅ LLM (Groq)
+        .route("/api/chat/llm", post(llm_answer))
+
+        // ✅ FAQ persistence
+        .route("/api/faqs", get(get_faqs).post(upsert_faq))
+        .route("/api/faqs/{id}", delete(delete_faq))
+        .route("/api/faqs/{id}/hit", post(hit_faq))
+
+        // =========================================================
         // NEWS
+        // =========================================================
         .route("/api/news", get(get_all_news).post(add_news))
         .route("/api/news/{id}", delete(delete_news))
 

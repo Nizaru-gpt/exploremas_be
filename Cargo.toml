@@ -8,7 +8,10 @@ axum = { version = "0.8.6", features = ["macros", "multipart"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "macros", "postgres"] }
+
+# ✅ tambah chrono feature
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "macros", "postgres", "chrono"] }
+
 bcrypt = "0.17.1"
 dotenvy = "0.15.7"
 validator = { version = "0.20.0", features = ["derive"] }
@@ -22,3 +25,8 @@ sha2 = "0.10"
 # EMAIL OTP
 lettre = { version = "0.11.15", default-features = false, features = ["smtp-transport", "builder", "tokio1-native-tls"] }
 
+# ✅ tambahan untuk created_at + serialize json
+chrono = { version = "0.4", features = ["serde"] }
+
+# ✅ buat call Groq (OpenAI-compatible)
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
